@@ -7,9 +7,12 @@ client.connect((SERVER, PORT))
 client.sendall(bytes("This is from Client".encode("UTF-8")))
 while True:
     in_data = client.recv(1024)
+    if(in_data == 'CLOSE'):
+        break
     print("From Server :", in_data.decode())
     out_data = raw_input()
     client.sendall(bytes(out_data.encode("UTF-8")))
     if out_data == 'quit':
         break
+print("Closing connection")
 client.close()
