@@ -1,10 +1,10 @@
-import socket, threading, os
+import socket, threading, os, ssl
 
 
 class ClientThread(threading.Thread):
-    def __init__(self, clientAddress, clientsocket):
+    def __init__(self, clientAddress, client_ssl):
         threading.Thread.__init__(self)
-        self.csocket = clientsocket
+        self.client_ssl = client_ssl
         self.kill_received = False
         print ("New connection added: ", clientAddress)
 
@@ -14,12 +14,12 @@ class ClientThread(threading.Thread):
             # self.csocket.send(bytes("Hi, This is from Server..",'utf-8'))
             msg = ''
             while True:
-                data = self.csocket.recv(2048)
+                data = self.client_ssl.recv(2048)
                 msg = data.decode()
                 if msg == 'quit':
                     break
-                print ("from client", msg)
-                self.csocket.send(bytes(msg.encode('UTF-8')))
+                print("from client", msg)
+                self.client_ssl.send(bytes(msg.encode('UTF-8')))
             self.kill_received = True
             print ("Client at ", clientAddress, " disconnected...")
 
@@ -35,12 +35,17 @@ threads = []
 while True:
     try:
         server.listen(1)
-        clientsock, clientAddress = server.accept()
-        newthread = ClientThread(clientAddress, clientsock)
+        client_sock, clientAddress = server.accept()
+        # wrap client's socket for SSL
+        client_ssl = ssl.wrap_socket(client_sock,
+                                     server_side=True,
+                                     certfile="server.crt",
+                                     keyfile="server.key")
+        newthread = ClientThread(clientAddress, client_ssl)
         newthread.start()
         threads.append(newthread)
     except KeyboardInterrupt:
-        print("Interrupted")
+        print "Interrupted"
         for t in threads:
             t.kill_received = True
             t.csocket.send(bytes("CLOSE".encode('UTF-8')))
