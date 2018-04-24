@@ -14,7 +14,7 @@ class ClientThread(threading.Thread):
         while True:
             data = self.csocket.recv(2048)
             msg = data.decode()
-            if msg == 'bye':
+            if msg == 'quit':
                 break
             print ("from client", msg)
             self.csocket.send(bytes(msg.encode('UTF-8')))
