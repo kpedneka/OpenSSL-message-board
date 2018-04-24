@@ -1,44 +1,35 @@
-import socket
-from threading import Thread
-from SocketServer import ThreadingMixIn
+import socket, threading
 
 
-# Multithreaded Python server : TCP Server Socket Thread Pool
-class ClientThread(Thread):
-
-    def __init__(self, ip, port):
-        Thread.__init__(self)
-        self.ip = ip
-        self.port = port
-        print "[+] New server socket thread started for " + ip + ":" + str(port)
+class ClientThread(threading.Thread):
+    def __init__(self, clientAddress, clientsocket):
+        threading.Thread.__init__(self)
+        self.csocket = clientsocket
+        print ("New connection added: ", clientAddress)
 
     def run(self):
+        print ("Connection from : ", clientAddress)
+        # self.csocket.send(bytes("Hi, This is from Server..",'utf-8'))
+        msg = ''
         while True:
-            data = conn.recv(2048)
-            print "Server received data:", data
-            MESSAGE = raw_input("Multithreaded Python server : Enter Response from Server/Enter exit:")
-            if MESSAGE == 'exit':
+            data = self.csocket.recv(2048)
+            msg = data.decode()
+            if msg == 'bye':
                 break
-            conn.send(MESSAGE)  # echo
+            print ("from client", msg)
+            self.csocket.send(bytes(msg.encode('UTF-8')))
+        print ("Client at ", clientAddress, " disconnected...")
 
 
-# Multithreaded Python server : TCP Server Socket Program Stub
-TCP_IP = '0.0.0.0'
-TCP_PORT = 2004
-BUFFER_SIZE = 20  # Usually 1024, but we need quick response
-
-tcpServer = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-tcpServer.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-tcpServer.bind((TCP_IP, TCP_PORT))
-threads = []
-
+LOCALHOST = "127.0.0.1"
+PORT = 8080
+server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+server.bind((LOCALHOST, PORT))
+print("Server started")
+print("Waiting for client request..")
 while True:
-    tcpServer.listen(4)
-    print "Multithreaded Python server : Waiting for connections from TCP clients..."
-    (conn, (ip, port)) = tcpServer.accept()
-    newthread = ClientThread(ip, port)
+    server.listen(1)
+    clientsock, clientAddress = server.accept()
+    newthread = ClientThread(clientAddress, clientsock)
     newthread.start()
-    threads.append(newthread)
-
-for t in threads:
-    t.join()
