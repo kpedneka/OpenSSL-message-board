@@ -48,6 +48,6 @@ while True:
         print "Interrupted"
         for t in threads:
             t.kill_received = True
-            t.csocket.send(bytes("CLOSE".encode('UTF-8')))
+            t.client_ssl.send(bytes("CLOSE".encode('UTF-8')))
             print(t.getName(), "Closed")
         os._exit(0)
