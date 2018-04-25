@@ -8,7 +8,7 @@ Created on Tue Apr 24 19:11:40 2018
 import os
 import errno
 import datetime
-path = "./"
+path = os.getcwd() + '/groups/'
 def put_messages(group, username, message):
     if not os.path.exists(os.path.dirname(path)):
         try:
