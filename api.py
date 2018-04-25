@@ -44,5 +44,5 @@ def get_messages(group):
     return data_list
 
 def get_groups():
-    onlyfiles = [f for f in os.listdir("./") if os.path.isfile(os.path.join("./", f))]
+    onlyfiles = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
     return onlyfiles
