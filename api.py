@@ -32,7 +32,11 @@ def get_messages(group):
             if exc.errno != errno.EEXIST:
                 raise
         
-    fp = open(path+group, "r+")
+    try:
+        fp = open(os.path.join(path,group), "r+")
+    except IOError:
+        print 'cannot open', path+group
+        return []
     data_list = []
     for line in fp:
         data_list.append(tuple(line.strip().split("\",\"")))

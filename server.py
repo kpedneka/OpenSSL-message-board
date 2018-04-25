@@ -1,5 +1,5 @@
 import socket, threading, os, ssl
-
+import api
 
 class ClientThread(threading.Thread):
     def __init__(self, clientAddress, client_ssl):
@@ -49,10 +49,19 @@ class ClientThread(threading.Thread):
             while True:
                 data = self.client_ssl.recv(2048)
                 msg = data.decode()
-                if msg == 'quit':
+                if msg == 'END':
+                    self.client_ssl.send(bytes("Connection closed".encode('UTF-8')))
                     break
-                print("from client", msg)
-                self.client_ssl.send(bytes(msg.encode('UTF-8')))
+                if msg.split()[0] not in ['GET','POST'] or len(msg.split()) <= 1:
+                    self.client_ssl.send(bytes("Invalid operation.".encode('UTF-8')))
+                msg = msg.split()
+                print msg
+                if msg[0] == "GET":
+                    messages = api.get_messages(msg[1])
+                    print "these are the messages in the group", messages
+                if msg[0] == "POST":
+                    api.put_messages(msg[1],username, msg[2])
+                self.client_ssl.send(bytes("".join(msg).encode('UTF-8')))
             self.kill_received = True
             print ("Client at ", clientAddress, " disconnected...")
 
