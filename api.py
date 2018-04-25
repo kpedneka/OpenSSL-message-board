@@ -17,7 +17,7 @@ def put_messages(group, username, message):
             if exc.errno != errno.EEXIST:
                 raise
         
-    fo = open(path+group+".csv", "a+")
+    fo = open(path+group, "a+")
     fo.seek(0,2)
     
     fo.write(datetime.datetime.now().strftime("%A %d %B %Y %I:%M %p")+"\",\""+username+ "\",\"" + message + "\n")
@@ -32,9 +32,13 @@ def get_messages(group):
             if exc.errno != errno.EEXIST:
                 raise
         
-    fp = open(path+group+".csv", "r+")
+    fp = open(path+group, "r+")
     data_list = []
     for line in fp:
         data_list.append(tuple(line.strip().split("\",\"")))
     fp.close()
     return data_list
+
+def get_groups():
+    onlyfiles = [f for f in os.listdir("./") if os.path.isfile(os.path.join("./", f))]
+    return onlyfiles
