@@ -1,5 +1,7 @@
-import socket, threading, os, ssl
+import socket, threading, os, ssl, hashlib
 import api
+
+oursalt = "thisisourprojectssalt"
 
 class ClientThread(threading.Thread):
     def __init__(self, clientAddress, client_ssl):
@@ -11,7 +13,7 @@ class ClientThread(threading.Thread):
     def run(self):
         while not self.kill_received:
             print ("Connection from : ", clientAddress)
-            auth = False;
+            auth = False
             valid_user = False
             valid_password = False
 
@@ -23,7 +25,7 @@ class ClientThread(threading.Thread):
                     data = self.client_ssl.recv(2048)
                     username = data.decode()
                     if username.isalnum() is True:
-                        valid_user = True;
+                        valid_user = True
 
                 print("User entered username: ", username)
                 # search for username, store hash in variable 'password'
@@ -34,14 +36,30 @@ class ClientThread(threading.Thread):
                     data = self.client_ssl.recv(2048)
                     password = data.decode()
                     if password.isalnum() is True:
-                        valid_password = True;
+                        valid_password = True
+                correct_password = False
+                while correct_password is False:
+                    hashed_pass_str = getHashedPass(username)
+                    correct_password = True
+                    # if username doesn't yet exist, add it to the password file
+                    if hashed_pass_str is None:
+                        addUserPass(username, password)
+                        correct_password = True
+                    # else, hash the password with the salt and see it matches the result
+                    else:
+                        # if they match, authenticate
+                        hash_obj = hashlib.sha256()
+                        hash_obj.update(oursalt + password)
+                        attempted_hash_str = hash_obj.hexdigest()
+                        if attempted_hash_str == hashed_pass_str:
+                            correct_password = True
+                        # otherwise, tell the user
+                        else:
+                            msg = 'Error: invalid password.'
 
                 auth = True
                 print("User ", username, " entered password ", password)
 
-                # if password is null, user must create account by entering password
-
-                # if password is not null, ask user to enter password, hash, and compare against our checked hash
 
             msg = "Welcome, " + username
             self.client_ssl.send(bytes(msg.encode('UTF-8')))
@@ -64,6 +82,37 @@ class ClientThread(threading.Thread):
                 self.client_ssl.send(bytes("".join(msg).encode('UTF-8')))
             self.kill_received = True
             print ("Client at ", clientAddress, " disconnected...")
+
+def getHashedPass(username):
+    # open the passwords.txt (create it if not present)
+    with open('passwords.txt', 'a+') as pass_file:
+    # search line by line
+        # for each line, split the user and password hash by a semicolon
+        line_list = pass_file.readlines()
+        for line in line_list:
+            split = line.strip().split(":")
+            curr_username = split[0]
+            curr_pass_hash_str = split[1]
+            # once the username matches input username, return password hash
+            if curr_username == username:
+                pass_file.close()
+                return curr_pass_hash_str
+    # we haven't returned anything, return null
+    pass_file.close()
+    return None
+
+def addUserPass(username, password):
+    # open the passwords.txt (create it if not present)
+    with open('passwords.txt', 'r+') as pass_file:
+        # hash the password with pass_salt, SHA-256
+        hash_obj = hashlib.sha256()
+        hash_obj.update(oursalt + password)
+        hashed_pass_str = hash_obj.hexdigest()
+        # add a line with username and hashed password, separated by only a semicolon
+        print "adding username: " + username + "\n"
+        print "for hashed pass: " + hashed_pass_str + "\n"
+        new_line = username + ":" + hashed_pass_str + "\n"
+        pass_file.write(new_line)
 
 
 LOCALHOST = "127.0.0.1"
