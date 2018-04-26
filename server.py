@@ -28,46 +28,54 @@ class ClientThread(threading.Thread):
                         valid_user = True
 
                 print("User entered username: ", username)
-                # search for username, store hash in variable 'password'
+                hashed_pass_str = getHashedPass(username)
+                if hashed_pass_str is None:
+                    #User does not exist. Create account
+                    while valid_password is False:
+                        msg = 'New user ' + username + ', please enter an alphanumeric password'
+                        self.client_ssl.send(bytes(msg.encode('UTF-8')))
+                        data = self.client_ssl.recv(2048)
+                        password = data.decode()
+                        if password.isalnum() is True:
+                            addUserPass(username, password)
+                            valid_password = True
+                            auth = True
+                    break
 
-                while valid_password is False:
-                    msg = 'Please enter an alphanumeric password'
-                    self.client_ssl.send(bytes(msg.encode('UTF-8')))
-                    data = self.client_ssl.recv(2048)
-                    password = data.decode()
-                    if password.isalnum() is True:
-                        valid_password = True
+                # User does exist. Authenticate with password
+                # retrieve user's correct password from file
+                hashed_pass_str = getHashedPass(username)
                 correct_password = False
+                first_run = True  # used to check whether we send "Enter your password" vs. "error: wrong password"
                 while correct_password is False:
-                    hashed_pass_str = getHashedPass(username)
-                    # if username doesn't yet exist, add it to the password file
-                    if hashed_pass_str is None:
-                        addUserPass(username, password)
+                    if first_run:
+                        msg = 'User ' + username + ', please enter your password'
+                        self.client_ssl.send(bytes(msg.encode('UTF-8')))
+                        first_run = False
+                    # receive password attempt from user
+                    password = self.client_ssl.recv(2048).decode()
+
+                    # if hashed attempt matches retrieved hash, authenticate
+                    hash_obj = hashlib.sha256()
+                    hash_obj.update(oursalt + password)
+                    attempted_hash_str = hash_obj.hexdigest()
+                    print "attempted hash str: " + attempted_hash_str + "\n"
+                    print "actual hash str: " + hashed_pass_str + "\n"
+                    if attempted_hash_str == hashed_pass_str:
                         correct_password = True
-                    # else, hash the password with the salt and see it matches the result
+                    # otherwise, tell the user
                     else:
-                        # if they match, authenticate
-                        hash_obj = hashlib.sha256()
-                        hash_obj.update(oursalt + password)
-                        attempted_hash_str = hash_obj.hexdigest()
-                        print "attempted hash str: " + attempted_hash_str + "\n"
-                        print "actual hash str: " + hashed_pass_str + "\n"
-                        if attempted_hash_str == hashed_pass_str:
-                            correct_password = True
-                        # otherwise, tell the user
-                        else:
-                            msg = 'Error: incorrect password.'
-                            print "Client entered incorrect password.\n"
-                            self.client_ssl.send(bytes(msg.encode('UTF-8')))
-                            break
+                        msg = 'Error: Incorrect password. Try again'
+                        print "Client entered incorrect password.\n"
+                        self.client_ssl.send(bytes(msg.encode('UTF-8')))
+                        #break
 
                 if correct_password is True:
                     auth = True
-                else:
-                    valid_user = False
-                    valid_password = False
                 print("User ", username, " entered password ", password)
 
+            msg = 'Welcome, ' + username
+            self.client_ssl.send(bytes(msg.encode('UTF-8')))
             while True:
                 data = self.client_ssl.recv(2048)
                 msg = data.decode()
