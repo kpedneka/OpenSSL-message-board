@@ -10,13 +10,17 @@ import errno
 import datetime
 path = os.getcwd() + '/groups/'
 def put_messages(group, username, message):
+    requested_path = path + group
+    if os.path.commonprefix((os.path.realpath(requested_path),path)) != path:
+        print 'Preventing directory traversal'
+        return
+
     if not os.path.exists(os.path.dirname(path)):
         try:
             os.makedirs(os.path.dirname(path))
         except OSError as exc: # Guard against race condition
             if exc.errno != errno.EEXIST:
                 raise
-        
     fo = open(path+group, "a+")
     fo.seek(0,2)
     
