@@ -74,7 +74,7 @@ class ClientThread(threading.Thread):
                     auth = True
                 print("User ", username, " entered password ", password)
 
-            msg = 'Welcome, ' + username
+            msg = 'Welcome, ' + username + '! List of groups: ' + ' '.join(api.get_groups())
             self.client_ssl.send(bytes(msg.encode('UTF-8')))
             while True:
                 data = self.client_ssl.recv(2048)
@@ -96,11 +96,15 @@ class ClientThread(threading.Thread):
                             print "these are the messages in the group", messages
                         else:
                             self.client_ssl.send(bytes("No messages found for that group".encode('UTF-8')))
-                    if msg[0] == "POST":
+                    elif msg[0] == "POST":
                         if len(msg) > 2:
                             api.put_messages(msg[1],username, msg[2])
+                            self.client_ssl.send(bytes(("POST received for message: " +
+                                                        "\"" + msg[2] + "\"").encode('UTF-8')))
                         else:
                             self.client_ssl.send(bytes("Please enter a message to POST".encode('UTF-8')))
+                    else:
+                        self.client_ssl.send(bytes("Invalid operation.".encode('UTF-8')))
                 #self.client_ssl.send(bytes("".join(msg).encode('UTF-8')))
             self.kill_received = True
             print ("Client at ", clientAddress, " disconnected...")

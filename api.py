@@ -52,6 +52,7 @@ def get_messages(group):
     #fp.close()
     return data_list
 
+
 def get_groups():
     onlyfiles = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
     return onlyfiles
