@@ -29,6 +29,11 @@ def put_messages(group, username, message):
 
 
 def get_messages(group):
+    requested_path = path + group
+    if os.path.commonprefix((os.path.realpath(requested_path),path)) != path:
+        print 'Preventing directory traversal'
+        return
+
     if not os.path.exists(os.path.dirname(path)):
         try:
             os.makedirs(os.path.dirname(path))
