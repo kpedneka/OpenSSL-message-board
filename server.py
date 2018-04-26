@@ -56,18 +56,17 @@ class ClientThread(threading.Thread):
                             correct_password = True
                         # otherwise, tell the user
                         else:
-                            msg = 'Error: invalid password.'
-                            print "Client entered invalid password.\n"
+                            msg = 'Error: incorrect password.'
+                            print "Client entered incorrect password.\n"
                             self.client_ssl.send(bytes(msg.encode('UTF-8')))
                             break
 
                 if correct_password is True:
                     auth = True
+                else:
+                    valid_user = False
+                    valid_password = False
                 print("User ", username, " entered password ", password)
-
-
-            msg = "Welcome, " + username
-            self.client_ssl.send(bytes(msg.encode('UTF-8')))
 
             while True:
                 data = self.client_ssl.recv(2048)
