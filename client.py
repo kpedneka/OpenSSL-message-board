@@ -17,7 +17,7 @@ while True:
     while(out_data == ''):
         out_data = raw_input()
     client_ssl.sendall(bytes(out_data.encode("UTF-8")))
-    if out_data == 'quit':
+    if out_data == 'END':
         break
 print "Closing connection"
 client_ssl.close()
