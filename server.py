@@ -40,7 +40,6 @@ class ClientThread(threading.Thread):
                 correct_password = False
                 while correct_password is False:
                     hashed_pass_str = getHashedPass(username)
-                    correct_password = True
                     # if username doesn't yet exist, add it to the password file
                     if hashed_pass_str is None:
                         addUserPass(username, password)
@@ -51,13 +50,19 @@ class ClientThread(threading.Thread):
                         hash_obj = hashlib.sha256()
                         hash_obj.update(oursalt + password)
                         attempted_hash_str = hash_obj.hexdigest()
+                        print "attempted hash str: " + attempted_hash_str + "\n"
+                        print "actual hash str: " + hashed_pass_str + "\n"
                         if attempted_hash_str == hashed_pass_str:
                             correct_password = True
                         # otherwise, tell the user
                         else:
                             msg = 'Error: invalid password.'
+                            print "Client entered invalid password.\n"
+                            self.client_ssl.send(bytes(msg.encode('UTF-8')))
+                            break
 
-                auth = True
+                if correct_password is True:
+                    auth = True
                 print("User ", username, " entered password ", password)
 
 
@@ -93,8 +98,11 @@ def getHashedPass(username):
             split = line.strip().split(":")
             curr_username = split[0]
             curr_pass_hash_str = split[1]
+            print "checking username: " + curr_username + "\n"
+            print "checking hashed password: " + curr_pass_hash_str + "\n"
             # once the username matches input username, return password hash
             if curr_username == username:
+                print "found username!\n"
                 pass_file.close()
                 return curr_pass_hash_str
     # we haven't returned anything, return null
