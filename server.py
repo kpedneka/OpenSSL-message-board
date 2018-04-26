@@ -81,6 +81,8 @@ class ClientThread(threading.Thread):
                 print msg
                 if msg[0] == "GET":
                     messages = api.get_messages(msg[1])
+                    messages = api.get_messages(msg[1])
+                    self.client_ssl.send("these are the messages in the group".join(messages).encode('UTF-8'))
                     print "these are the messages in the group", messages
                 if msg[0] == "POST":
                     api.put_messages(msg[1],username, msg[2])

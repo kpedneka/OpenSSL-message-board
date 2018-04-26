@@ -20,7 +20,7 @@ def put_messages(group, username, message):
     fo = open(path+group, "a+")
     fo.seek(0,2)
     
-    fo.write(datetime.datetime.now().strftime("%A %d %B %Y %I:%M %p")+"\",\""+username+ "\",\"" + message + "\n")
+    fo.write("Date: " +datetime.datetime.now().strftime("%A %d %B %Y %I:%M %p")+", User:"+username+ " , Message : " + message + "\n")
     fo.close()
 
 
@@ -35,12 +35,12 @@ def get_messages(group):
     try:
         fp = open(os.path.join(path,group), "r+")
     except IOError:
-        print 'cannot open', path+group
+        print ('cannot open', path+group)
         return []
-    data_list = []
-    for line in fp:
-        data_list.append(tuple(line.strip().split("\",\"")))
-    fp.close()
+    data_list = fp.read()
+    #for line in fp:
+        #data_list.append(tuple(line.strip().split("\",\"")))
+    #fp.close()
     return data_list
 
 def get_groups():
