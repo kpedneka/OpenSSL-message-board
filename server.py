@@ -120,7 +120,7 @@ def getHashedPass(username):
 
 def addUserPass(username, password):
     # open the passwords.txt (create it if not present)
-    with open('passwords.txt', 'r+') as pass_file:
+    with open('passwords.txt', 'a') as pass_file:
         # hash the password with pass_salt, SHA-256
         hash_obj = hashlib.sha256()
         hash_obj.update(oursalt + password)
