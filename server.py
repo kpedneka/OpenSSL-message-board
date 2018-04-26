@@ -84,10 +84,9 @@ class ClientThread(threading.Thread):
                     break
                 if msg.split()[0] not in ['GET','POST'] or len(msg.split()) <= 1:
                     self.client_ssl.send(bytes("Invalid operation.".encode('UTF-8')))
-                msg = msg.split()
+                msg = msg.split(' ', 2)
                 print msg
                 if msg[0] == "GET":
-                    messages = api.get_messages(msg[1])
                     messages = api.get_messages(msg[1])
                     self.client_ssl.send("these are the messages in the group".join(messages).encode('UTF-8'))
                     print "these are the messages in the group", messages
